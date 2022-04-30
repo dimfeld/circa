@@ -12,12 +12,20 @@
         id: 10,
         label: 'Child 1',
         children: [
-          { id: 20, label: 'Subchild 1' },
-          { id: 21, label: 'Subchild 2' },
+          { id: 20, label: 'Subchild 1', value: null, exponent: 1 },
+          { id: 21, label: 'Subchild 2', value: '2/5', exponent: 1 },
         ],
       },
-      { id: 11, label: 'Child 2' },
-      { id: 12, label: 'Child 3' },
+      {
+        id: 11,
+        label: 'Child 2',
+        value: 2,
+        children: [
+          { id: 20, label: 'Subchild 1', value: null, exponent: 1 },
+          { id: 21, label: 'Subchild 2', value: '2/5', exponent: 1 },
+        ],
+      },
+      { id: 12, label: 'Child 3', value: null, exponent: 2 },
     ],
   };
 
@@ -41,11 +49,11 @@
   $: generateLinkPath = (link: HierarchyPointLink<Node>) => {
     const coords = {
       source: [
-        link.source.x + centerX + nodeWidth / 2,
+        link.source.x + nodeWidth / 2,
         link.source.y + boxContentBottom,
       ] as [number, number],
       target: [
-        link.target.x + centerX + nodeWidth / 2,
+        link.target.x + nodeWidth / 2,
         link.target.y + boxContentTop,
       ] as [number, number],
     };
@@ -54,29 +62,43 @@
   };
 </script>
 
-<div class="h-full w-full overflow-auto" bind:clientWidth={width}>
-  {#each nodes as node (node.data.id)}
-    <div
-      style:width="{nodeWidth}px"
-      style:height="{nodeHeight}px"
-      style:top="{node.y}px"
-      style:left="{node.x + centerX}px"
-      class="absolute grid place-items-center"
-    >
-      <div
-        style:height="{nodeBoxHeight}px"
-        class="w-32 border border-gray-500 px-3 py-1"
-      >
-        <TreeNode node={node.data} />
-      </div>
-    </div>
-  {/each}
-
-  <svg class="h-full w-full fill-transparent stroke-black">
+<div
+  class="w-full overflow-auto"
+  style:--nodeWidth="{nodeWidth}px"
+  style:--nodeHeight="{nodeHeight}px"
+  style:--nodeBoxHeight="{nodeBoxHeight}px"
+  bind:clientWidth={width}
+>
+  <div class="absolute top-0 left-1/2 overflow-visible">
     {#each nodes as node (node.data.id)}
-      {#each node.links() as link}
-        <path d={generateLinkPath(link)} />
-      {/each}
+      <div
+        style:top="{node.y}px"
+        style:left="{node.x}px"
+        class="node absolute grid place-items-center"
+      >
+        <div class="node-contents w-32 border border-gray-200 px-3 py-1 shadow">
+          <TreeNode node={node.data} />
+        </div>
+      </div>
     {/each}
-  </svg>
+
+    <svg class="overflow-visible fill-transparent stroke-black">
+      {#each nodes as node (node.data.id)}
+        {#each node.links() as link}
+          <path d={generateLinkPath(link)} />
+        {/each}
+      {/each}
+    </svg>
+  </div>
 </div>
+
+<style>
+  .node {
+    width: var(--nodeWidth);
+    height: var(--nodeHeight);
+  }
+
+  .node-contents {
+    height: var(--nodeBoxHeight);
+  }
+</style>

@@ -2,6 +2,6 @@
   import '../app.css';
 </script>
 
-<main class="h-screen w-screen">
+<main>
   <slot />
 </main>
