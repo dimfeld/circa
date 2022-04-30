@@ -1,15 +1,8 @@
 <script lang="ts">
   import type { HierarchyPointLink } from 'd3';
-  import type { HierarchyPointNode } from 'd3';
   import { hierarchy, tree, linkVertical } from 'd3';
-
-  let width = 0;
-
-  interface Node {
-    id: number;
-    label: string;
-    children?: Node[];
-  }
+  import TreeNode from './TreeNode.svelte';
+  import type { Node } from './types';
 
   const data: Node = {
     id: 1,
@@ -35,6 +28,7 @@
   const boxContentTop = (nodeHeight - nodeBoxHeight) / 2;
   const boxContentBottom = (nodeHeight + nodeBoxHeight) / 2;
 
+  let width = 0;
   $: centerX = width / 2;
   $: h = hierarchy(data);
   $: layoutFn = tree<Node>().nodeSize([nodeWidth, nodeHeight]);
@@ -73,7 +67,7 @@
         style:height="{nodeBoxHeight}px"
         class="w-32 border border-gray-500 px-3 py-1"
       >
-        {node.data.label}
+        <TreeNode node={node.data} />
       </div>
     </div>
   {/each}
