@@ -1,33 +1,12 @@
 <script lang="ts">
   import type { HierarchyPointLink } from 'd3';
   import { hierarchy, tree, linkVertical } from 'd3';
+  import { interpolatePath } from 'd3-interpolate-path';
+  import { tweened } from 'svelte/motion';
+  import { quadInOut } from 'svelte/easing';
   import TreeNode from './TreeNode.svelte';
-  import type { Node } from './types';
-
-  const data: Node = {
-    id: 1,
-    label: 'A thing',
-    children: [
-      {
-        id: 10,
-        label: 'Child 1',
-        children: [
-          { id: 20, label: 'Subchild 1', value: null, exponent: 1 },
-          { id: 21, label: 'Subchild 2', value: '2/5', exponent: 1 },
-        ],
-      },
-      {
-        id: 11,
-        label: 'Child 2',
-        value: 2,
-        children: [
-          { id: 20, label: 'Subchild 1', value: null, exponent: 1 },
-          { id: 21, label: 'Subchild 2', value: '2/5', exponent: 1 },
-        ],
-      },
-      { id: 12, label: 'Child 3', value: null, exponent: 2 },
-    ],
-  };
+  import { createTreeManager, type Node } from './data';
+  import { onDestroy } from 'svelte';
 
   const nodeWidth = 150;
   const nodeHeight = 128;
@@ -36,9 +15,11 @@
   const boxContentTop = (nodeHeight - nodeBoxHeight) / 2;
   const boxContentBottom = (nodeHeight + nodeBoxHeight) / 2;
 
-  let width = 0;
-  $: centerX = width / 2;
-  $: h = hierarchy(data);
+  const treeManager = createTreeManager();
+  const { data } = treeManager;
+  onDestroy(treeManager.destroy);
+
+  $: h = hierarchy($data);
   $: layoutFn = tree<Node>().nodeSize([nodeWidth, nodeHeight]);
   $: layout = layoutFn(h);
   $: nodes = layout.descendants();
@@ -60,22 +41,60 @@
 
     return linkFn(coords);
   };
+
+  const tweenDuration = 250;
+  const tweenEasing = quadInOut;
+
+  function tweenXY(node: HTMLElement, { x, y }) {
+    const coords = tweened([x, y], {
+      duration: tweenDuration,
+      easing: tweenEasing,
+    });
+
+    node.style.left = x + 'px';
+    node.style.top = y + 'px';
+
+    const coordsUn = coords.subscribe(([x, y]) => {
+      node.style.left = x + 'px';
+      node.style.top = y + 'px';
+    });
+
+    return {
+      update({ x, y }) {
+        coords.set([x, y]);
+      },
+      destroy: coordsUn,
+    };
+  }
+
+  function tweenPath(node: SVGPathElement, path: string) {
+    const dT = tweened(path, {
+      duration: tweenDuration,
+      easing: tweenEasing,
+      interpolate: interpolatePath,
+    });
+    node.setAttribute('d', path);
+    const dUn = dT.subscribe((d) => node.setAttribute('d', d));
+
+    return {
+      update(path: string) {
+        dT.set(path);
+      },
+      destroy: dUn,
+    };
+  }
 </script>
 
 <div
-  class="w-full overflow-auto"
+  class="max-h-screen w-full overflow-auto"
+  style:height={(h.height + 1) * nodeHeight + 'px'}
   style:--nodeWidth="{nodeWidth}px"
   style:--nodeHeight="{nodeHeight}px"
   style:--nodeBoxHeight="{nodeBoxHeight}px"
-  bind:clientWidth={width}
 >
   <div class="absolute top-0 left-1/2 overflow-visible">
     {#each nodes as node (node.data.id)}
-      <div
-        style:top="{node.y}px"
-        style:left="{node.x}px"
-        class="node absolute grid place-items-center"
-      >
+      <div use:tweenXY={node} class="node absolute grid place-items-center">
         <div class="node-contents w-32 border border-gray-200 px-3 py-1 shadow">
           <TreeNode node={node.data} />
         </div>
@@ -84,8 +103,10 @@
 
     <svg class="overflow-visible fill-transparent stroke-black">
       {#each nodes as node (node.data.id)}
-        {#each node.links() as link}
-          <path d={generateLinkPath(link)} />
+        {#each node
+          .links()
+          .filter((l) => l.source === node) as link (link.target.data.id)}
+          <path use:tweenPath={generateLinkPath(link)} />
         {/each}
       {/each}
     </svg>

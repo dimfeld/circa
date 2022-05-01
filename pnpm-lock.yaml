@@ -8,6 +8,7 @@ specifiers:
   '@typescript-eslint/parser': ^5.10.1
   autoprefixer: ^10.4.4
   d3: ^7.4.4
+  d3-interpolate-path: ^2.2.3
   eslint: ^7.32.0
   eslint-config-prettier: ^8.3.0
   eslint-plugin-svelte3: ^3.2.1
@@ -24,6 +25,7 @@ specifiers:
 
 dependencies:
   d3: 7.4.4
+  d3-interpolate-path: 2.2.3
 
 devDependencies:
   '@sveltejs/adapter-vercel': 1.0.0-next.50
@@ -855,6 +857,10 @@ packages:
   /d3-hierarchy/3.1.2:
     resolution: {integrity: sha512-FX/9frcub54beBdugHjDCdikxThEqjnR93Qt7PvQTOHxyiNCAlvMrHhclk3cD5VeAaq9fxmfRp+CnWw9rEMBuA==}
     engines: {node: '>=12'}
+    dev: false
+
+  /d3-interpolate-path/2.2.3:
+    resolution: {integrity: sha512-1i1WUmOzSHI7nYqhjnL9v/gA5VQNgMMfX4u1Emv2vKmUUQsRPx/Ghl/AvcyOq3GRINW8iSz5elCdoHX0imyWCg==}
     dev: false
 
   /d3-interpolate/3.0.1:
