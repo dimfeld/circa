@@ -5,8 +5,8 @@
   import { tweened } from 'svelte/motion';
   import { quadInOut } from 'svelte/easing';
   import TreeNode from './TreeNode.svelte';
-  import { createTreeManager, type Node } from './data';
-  import { onDestroy } from 'svelte';
+  import { createTreeManager, type Node, type NodeInput } from './data';
+  import { onDestroy, setContext } from 'svelte';
 
   const nodeWidth = 150;
   const nodeHeight = 140;
@@ -15,11 +15,25 @@
   const boxContentTop = (nodeHeight - nodeBoxHeight) / 2;
   const boxContentBottom = (nodeHeight + nodeBoxHeight) / 2;
 
-  const treeManager = createTreeManager();
+  let loadData: NodeInput | undefined;
+  if (typeof window !== 'undefined') {
+    const load = localStorage.getItem('circa_treedata');
+    if (load) {
+      loadData = JSON.parse(load);
+    }
+  }
+
+  $: if (typeof window !== 'undefined') {
+    console.log('saving');
+    localStorage.setItem('circa_treedata', JSON.stringify($data.data));
+  }
+
+  const treeManager = createTreeManager(loadData);
   const { data } = treeManager;
+  setContext('treeManager', treeManager);
   onDestroy(treeManager.destroy);
 
-  $: h = hierarchy($data);
+  $: h = hierarchy($data.data);
   $: layoutFn = tree<Node>().nodeSize([nodeWidth, nodeHeight]);
   $: layout = layoutFn(h);
   $: nodes = layout.descendants();

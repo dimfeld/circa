@@ -18,6 +18,8 @@ export interface Node {
   units?: [Unit[], Unit[]];
   parent?: Node;
   children?: Node[];
+  manager?: TreeManager;
+  toJSON(): void;
 }
 
 /** Recalculate a node's value from its children */
@@ -56,13 +58,15 @@ function recalculate(node: Node | undefined) {
 
   // This will set the value and propagate it upward.
   node.value.set(outputValue);
+  node.manager?.bumpVersion();
 }
 
 export interface NodeValueStore extends Writable<NodeValue> {
   get(): NodeValue;
+  toJSON(): NodeValue;
 }
 
-export function emptyNodeValue() {
+export function emptyNodeValue(): NodeValue {
   return {
     num: null,
     denom: 1,
@@ -70,12 +74,34 @@ export function emptyNodeValue() {
   };
 }
 
-export function newNode(
-  nodeInput: Omit<Node, 'value' | 'displayType'> & {
-    value?: NodeValue;
-    displayType?: NodeDisplayType;
+function isNode(n: Node | NodeInput): n is Node {
+  return Boolean((n as Node).value?.subscribe);
+}
+
+export type NodeInput = Omit<
+  Node,
+  'value' | 'displayType' | 'children' | 'toJSON'
+> & {
+  value?: NodeValue;
+  displayType?: NodeDisplayType;
+  children?: (Node | NodeInput)[];
+};
+
+export function newNode(nodeInput: NodeInput | Node) {
+  function handleChildren(node: Node) {
+    if (node.children?.length) {
+      for (let child of node.children) {
+        child.parent = node;
+      }
+    }
   }
-) {
+
+  if (isNode(nodeInput)) {
+    // It's already a Node, so just make sure the children point to the parent.
+    handleChildren(nodeInput);
+    return nodeInput;
+  }
+
   let value: NodeValue = nodeInput.value ?? emptyNodeValue();
   let store = writable(value);
 
@@ -95,73 +121,93 @@ export function newNode(
     get() {
       return value;
     },
+    toJSON() {
+      return value;
+    },
   };
 
   let node: Node = {
     ...nodeInput,
+    children: nodeInput.children?.map(newNode),
     displayType: nodeInput.displayType ?? 'plain',
     value: nodeValueStore,
+    toJSON() {
+      const { manager: _manager, parent, ...data } = this;
+      return data;
+    },
   };
 
-  if (node.children?.length) {
-    for (let child of node.children) {
-      child.parent = node;
-    }
-  }
+  handleChildren(node);
 
   return node;
 }
 
-const initialData: Node = newNode({
+const fixtureData: NodeInput = {
   id: 1,
   label: 'A thing',
   children: [
-    newNode({
+    {
       id: 10,
       label: 'Child 1',
       children: [
-        newNode({
+        {
           id: 20,
           label: 'Subchild 1',
-        }),
-        newNode({
+        },
+        {
           id: 21,
           label: 'Subchild 2',
           value: { num: 2, denom: 5, exp: 1 },
-        }),
+        },
       ],
-    }),
-    newNode({
+    },
+    {
       id: 11,
       label: 'Child 2',
       value: { num: 2, denom: 1, exp: 1 },
       children: [
-        newNode({
+        {
           id: 23,
           label: 'Subchild 1',
-        }),
-        newNode({
+        },
+        {
           id: 24,
           label: 'Subchild 2',
           value: { num: 2, denom: 5, exp: 1 },
-        }),
+        },
       ],
-    }),
-    newNode({
+    },
+    {
       id: 12,
       label: 'Child 3',
       value: { num: null, denom: 1, exp: 2 },
-    }),
-    newNode({
+    },
+    {
       id: 13,
       label: 'Child 4',
       value: { num: null, denom: 1, exp: 2 },
-    }),
+    },
   ],
-});
+};
 
-export function createTreeManager() {
-  return {
+export interface TreeManager {
+  addChildren(parent: Node, children: Node[], startIndex?: number): void;
+  removeNode(node: Node): void;
+  data: Writable<{ data: Node; version: number }>;
+  bumpVersion(): void;
+  destroy(): void;
+}
+
+export function createTreeManager(initialData?: NodeInput) {
+  let data = newNode(initialData ?? fixtureData);
+  const dataStore = writable({ data, version: 0 });
+
+  const bumpVersion = () =>
+    dataStore.update((d) => ({ ...d, version: d.version + 1 }));
+
+  const manager: TreeManager = {
+    data: dataStore,
+    bumpVersion,
     addChildren(parent: Node, children: Node[], startIndex?: number) {
       if (!parent.children) {
         parent.children = [...children];
@@ -179,15 +225,20 @@ export function createTreeManager() {
       }
 
       recalculate(parent);
+      bumpVersion();
     },
-    data: writable(initialData),
     removeNode(node: Node) {
       let { parent } = node;
       if (parent?.children) {
         parent.children = parent.children.filter((c) => c !== node);
         recalculate(parent);
       }
+
+      bumpVersion();
     },
     destroy() {},
   };
+
+  data.manager = manager;
+  return manager;
 }

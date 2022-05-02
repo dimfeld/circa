@@ -1,10 +1,18 @@
 <script lang="ts">
-  import type { Node, NodeDisplayType, NodeValue } from './data';
+  import {
+    type TreeManager,
+    type Node,
+    type NodeDisplayType,
+    type NodeValue,
+  } from './data';
   import { format } from 'd3';
+  import { getContext } from 'svelte';
 
   const expFormat = format('~e');
 
   export let node: Node;
+
+  const treeManager = getContext<TreeManager>('treeManager');
 
   $: value = node.value;
 
@@ -22,8 +30,8 @@
 
   const displayTypes: {
     type: NodeDisplayType;
-    class?: string;
     label: string;
+    class?: string;
   }[] = [
     { type: 'fraction', label: 'x/y' },
     { type: 'exp', label: 'E', class: 'font-medium' },
@@ -31,22 +39,26 @@
   ];
 </script>
 
-<div class="node-contents w-32 border border-gray-200 px-3 py-1 shadow">
+<div
+  class="node-contents flex w-32 flex-col border border-gray-200 px-3 py-1 shadow"
+>
+  <div class="text-sm font-medium">{node.label}</div>
   {#if node.children?.length}
     <span class="text-sm">{formatValue($value)}</span>
   {:else}
     <input type="number" class="text-sm w-24 border" bind:value={$value.num} />
   {/if}
 
-  <div>{node.label}</div>
-
-  <div class="flex justify-end text-xs">
+  <div class="mt-1 flex justify-end text-xs">
     {#each displayTypes as t}
       <button
         type="button"
         class="border px-1 {t.class || ''}"
         class:bg-blue-100={node.displayType === t.type}
-        on:click={() => (node.displayType = t.type)}>{t.label}</button
+        on:click={() => {
+          node.displayType = t.type;
+          treeManager.bumpVersion();
+        }}>{t.label}</button
       >
     {/each}
   </div>
