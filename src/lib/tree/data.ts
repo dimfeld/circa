@@ -8,10 +8,13 @@ export interface NodeValue {
   exp: number;
 }
 
+export type NodeDisplayType = 'fraction' | 'exp' | 'plain';
+
 export interface Node {
   id: number;
   label: string;
   value: NodeValueStore;
+  displayType: NodeDisplayType;
   units?: [Unit[], Unit[]];
   parent?: Node;
   children?: Node[];
@@ -68,7 +71,10 @@ export function emptyNodeValue() {
 }
 
 export function newNode(
-  nodeInput: Omit<Node, 'value'> & { value?: NodeValue }
+  nodeInput: Omit<Node, 'value' | 'displayType'> & {
+    value?: NodeValue;
+    displayType?: NodeDisplayType;
+  }
 ) {
   let value: NodeValue = nodeInput.value ?? emptyNodeValue();
   let store = writable(value);
@@ -93,6 +99,7 @@ export function newNode(
 
   let node: Node = {
     ...nodeInput,
+    displayType: nodeInput.displayType ?? 'plain',
     value: nodeValueStore,
   };
 

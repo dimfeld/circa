@@ -9,8 +9,8 @@
   import { onDestroy } from 'svelte';
 
   const nodeWidth = 150;
-  const nodeHeight = 128;
-  const nodeBoxHeight = 64;
+  const nodeHeight = 140;
+  const nodeBoxHeight = 80;
 
   const boxContentTop = (nodeHeight - nodeBoxHeight) / 2;
   const boxContentBottom = (nodeHeight + nodeBoxHeight) / 2;
@@ -95,9 +95,7 @@
   <div class="absolute top-0 left-1/2 overflow-visible">
     {#each nodes as node (node.data.id)}
       <div use:tweenXY={node} class="node absolute grid place-items-center">
-        <div class="node-contents w-32 border border-gray-200 px-3 py-1 shadow">
-          <TreeNode node={node.data} />
-        </div>
+        <TreeNode node={node.data} />
       </div>
     {/each}
 
@@ -117,9 +115,5 @@
   .node {
     width: var(--nodeWidth);
     height: var(--nodeHeight);
-  }
-
-  .node-contents {
-    height: var(--nodeBoxHeight);
   }
 </style>
