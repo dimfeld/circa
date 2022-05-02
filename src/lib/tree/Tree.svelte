@@ -4,13 +4,14 @@
   import { interpolatePath } from 'd3-interpolate-path';
   import { tweened } from 'svelte/motion';
   import { quadInOut } from 'svelte/easing';
+  import { fade } from 'svelte/transition';
   import TreeNode from './TreeNode.svelte';
   import { createTreeManager, type Node, type NodeInput } from './data';
   import { onDestroy, setContext } from 'svelte';
 
   const nodeWidth = 150;
-  const nodeHeight = 140;
-  const nodeBoxHeight = 80;
+  const nodeHeight = 128;
+  const nodeBoxHeight = 72;
 
   const boxContentTop = (nodeHeight - nodeBoxHeight) / 2;
   const boxContentBottom = (nodeHeight + nodeBoxHeight) / 2;
@@ -108,7 +109,11 @@
 >
   <div class="absolute top-0 left-1/2 overflow-visible">
     {#each nodes as node (node.data.id)}
-      <div use:tweenXY={node} class="node absolute grid place-items-center">
+      <div
+        in:fade|local={{ duration: tweenDuration }}
+        use:tweenXY={node}
+        class="node absolute grid place-items-center"
+      >
         <TreeNode node={node.data} />
       </div>
     {/each}
@@ -118,7 +123,10 @@
         {#each node
           .links()
           .filter((l) => l.source === node) as link (link.target.data.id)}
-          <path use:tweenPath={generateLinkPath(link)} />
+          <path
+            in:fade|local={{ duration: tweenDuration }}
+            use:tweenPath={generateLinkPath(link)}
+          />
         {/each}
       {/each}
     </svg>

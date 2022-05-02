@@ -33,23 +33,50 @@
     label: string;
     class?: string;
   }[] = [
-    { type: 'fraction', label: 'x/y' },
-    { type: 'exp', label: 'E', class: 'font-medium' },
     { type: 'plain', label: 'n', class: 'italic' },
+    { type: 'exp', label: 'E', class: 'font-medium' },
+    { type: 'fraction', label: 'x/y' },
   ];
+
+  $: displayType =
+    displayTypes.find((d) => node.displayType === d.type) ?? displayTypes[0];
+
+  function showOptionsDialog() {
+    alert('options');
+    dialog.showModal();
+  }
+
+  let dialog: HTMLDialogElement;
 </script>
 
 <div
-  class="node-contents flex w-32 flex-col border border-gray-200 px-3 py-1 shadow"
+  class="node-contents relative flex w-32 flex-col border border-gray-200 px-3 py-1 shadow"
 >
-  <div class="text-sm font-medium">{node.label}</div>
   {#if node.children?.length}
     <span class="text-sm">{formatValue($value)}</span>
   {:else}
-    <input type="number" class="text-sm w-24 border" bind:value={$value.num} />
+    <input
+      type="number"
+      class="text-sm w-full border"
+      bind:value={$value.num}
+    />
   {/if}
+  <div class="mt-1 flex items-center justify-between text-sm font-medium">
+    <span>{node.label}</span>
+    <button
+      type="button"
+      class="ml-1 border px-1 text-xs {displayType.class}"
+      on:click={showOptionsDialog}>{displayType.label}</button
+    >
+  </div>
 
-  <div class="mt-1 flex justify-end text-xs">
+  <div class="absolute inset-x-0  bottom-0 flex justify-center text-xs">
+    <button type="button"> Breakout </button>
+  </div>
+</div>
+
+<dialog bind:this={dialog}>
+  <div class="flex justify-start text-xs">
     {#each displayTypes as t}
       <button
         type="button"
@@ -62,7 +89,7 @@
       >
     {/each}
   </div>
-</div>
+</dialog>
 
 <style>
   .node-contents {
