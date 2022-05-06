@@ -35,7 +35,10 @@
   },
   "type": "module",
   "dependencies": {
+    "@popperjs/core": "^2.11.5",
     "d3": "^7.4.4",
-    "d3-interpolate-path": "^2.2.3"
+    "d3-interpolate-path": "^2.2.3",
+    "focus-svelte": "^0.3.4",
+    "tippy.js": "^6.3.7"
   }
 }
