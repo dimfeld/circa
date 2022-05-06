@@ -102,7 +102,7 @@
 
 <div
   class="max-h-screen w-full overflow-auto"
-  style:height={(h.height + 1) * nodeHeight + 'px'}
+  style:height={(h.height + 2) * nodeHeight + 'px'}
   style:--nodeWidth="{nodeWidth}px"
   style:--nodeHeight="{nodeHeight}px"
   style:--nodeBoxHeight="{nodeBoxHeight}px"

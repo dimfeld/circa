@@ -1,4 +1,4 @@
-import tippy from 'tippy.js';
+import tippy, { type Plugin } from 'tippy.js/headless';
 
 export type Position =
   | 'top'
@@ -23,12 +23,21 @@ export interface TippyOptions {
   fixed?: boolean;
   interactive?: boolean;
   role?: string;
+  closeOnEsc?: boolean;
   close?: () => void;
 }
 
 export function showTippy(
   node: HTMLDivElement,
-  { trigger, position, fixed, interactive, role, close }: TippyOptions
+  {
+    trigger,
+    position,
+    fixed,
+    interactive,
+    role,
+    close,
+    closeOnEsc = true,
+  }: TippyOptions
 ) {
   let tippyInstance = tippy(trigger ?? node.parentElement ?? node, {
     interactive: interactive ?? false,
@@ -38,6 +47,7 @@ export function showTippy(
     maxWidth: 'none',
     placement: position,
     role,
+    plugins: [closeOnEsc ? closeOnEscPlugin : null].filter(Boolean) as Plugin[],
     showOnCreate: true,
     popperOptions: {
       strategy: fixed ? 'fixed' : 'absolute',
@@ -55,3 +65,23 @@ export function showTippy(
     },
   };
 }
+const closeOnEscPlugin: Plugin = {
+  name: 'closeOnEscPlugin',
+  defaultValue: true,
+  fn({ hide }) {
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        hide();
+      }
+    }
+
+    return {
+      onShow() {
+        document.addEventListener('keydown', onKeyDown);
+      },
+      onHide() {
+        document.removeEventListener('keydown', onKeyDown);
+      },
+    };
+  },
+};

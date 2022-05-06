@@ -5,6 +5,7 @@
     type NodeDisplayType,
     type NodeValue,
   } from './data';
+  import Dropdown from '$lib/components/Dropdown.svelte';
   import { format } from 'd3';
   import { getContext } from 'svelte';
 
@@ -40,13 +41,6 @@
 
   $: displayType =
     displayTypes.find((d) => node.displayType === d.type) ?? displayTypes[0];
-
-  function showOptionsDialog() {
-    alert('options');
-    dialog.showModal();
-  }
-
-  let dialog: HTMLDialogElement;
 </script>
 
 <div
@@ -63,33 +57,36 @@
   {/if}
   <div class="mt-1 flex items-center justify-between text-sm font-medium">
     <span>{node.label}</span>
-    <button
-      type="button"
-      class="ml-1 border px-1 text-xs {displayType.class}"
-      on:click={showOptionsDialog}>{displayType.label}</button
-    >
+    <Dropdown>
+      <button
+        slot="button"
+        type="button"
+        class="ml-1 border px-1 text-xs {displayType.class}"
+        >{displayType.label}</button
+      >
+      <div class="flex w-full flex-col items-center">
+        <header class="whitespace-nowrap">Display Mode</header>
+        <div class="flex justify-start text-xs">
+          {#each displayTypes as t}
+            <button
+              type="button"
+              class="border px-1 {t.class || ''}"
+              class:bg-blue-100={node.displayType === t.type}
+              on:click={() => {
+                node.displayType = t.type;
+                treeManager.bumpVersion();
+              }}>{t.label}</button
+            >
+          {/each}
+        </div>
+      </div>
+    </Dropdown>
   </div>
 
   <div class="absolute inset-x-0  bottom-0 flex justify-center text-xs">
     <button type="button"> Breakout </button>
   </div>
 </div>
-
-<dialog bind:this={dialog}>
-  <div class="flex justify-start text-xs">
-    {#each displayTypes as t}
-      <button
-        type="button"
-        class="border px-1 {t.class || ''}"
-        class:bg-blue-100={node.displayType === t.type}
-        on:click={() => {
-          node.displayType = t.type;
-          treeManager.bumpVersion();
-        }}>{t.label}</button
-      >
-    {/each}
-  </div>
-</dialog>
 
 <style>
   .node-contents {

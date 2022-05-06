@@ -11,7 +11,7 @@
   export let label: string | undefined = undefined;
   export let pad = true;
   export let arrow: IconData | undefined | null | false = chevronDownOutline;
-  export let closeOnClickInside = true;
+  export let closeOnClickInside = false;
 
   let classNames = '';
   export { classNames as class };
@@ -45,22 +45,25 @@
   </div>
 
   {#if open && dropdownButton}
-    <div
-      use:showTippy={{
-        trigger: dropdownButton,
-        position,
-        interactive: true,
-        role: 'menu',
-        close: () => (open = false),
-      }}
-      on:click={clicked}
-    >
+    <div>
       <div
-        use:focus={{ enabled: true }}
-        class:py-2={pad}
-        class="rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-black dark:ring-gray-200"
+        use:showTippy={{
+          trigger: dropdownButton,
+          position,
+          interactive: true,
+          role: 'menu',
+          close: () => (open = false),
+        }}
+        on:click={clicked}
       >
-        <slot />
+        <div
+          use:focus={{ enabled: true }}
+          class:py-2={pad}
+          class:px-3={pad}
+          class="rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none dark:bg-black dark:ring-gray-200"
+        >
+          <slot />
+        </div>
       </div>
     </div>
   {/if}
