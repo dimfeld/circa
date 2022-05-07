@@ -1,6 +1,5 @@
 const defaultTheme = require('tailwindcss/defaultTheme');
 const colors = require('tailwindcss/colors');
-const formsPlugin = require('@tailwindcss/forms');
 const { autoDarkPlugin, autoDarkColors } = require('./tailwind-autodark.cjs');
 
 const config = {

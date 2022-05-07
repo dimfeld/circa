@@ -1,4 +1,4 @@
-import tippy, { type Plugin } from 'tippy.js/headless';
+import tippy, { type Plugin } from 'tippy.js';
 
 export type Position =
   | 'top'
